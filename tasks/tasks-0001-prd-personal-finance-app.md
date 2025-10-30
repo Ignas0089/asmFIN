@@ -12,6 +12,7 @@
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
 - `apps/web/lib/supabase/server.ts` - Supabase server-side client for trusted data fetching.
 - `apps/web/lib/data/finance.ts` - Typed data-access helpers for dashboard metrics and tables.
+- `apps/web/lib/data/queryHelpers.ts` - Shared helpers for retryable Supabase queries and async states.
 - `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
 - `apps/web/components/BalanceOverview.tsx` - Summary card component displaying key financial metrics.
 - `apps/web/components/SpendingChart.tsx` - Chart component rendering categorized spending using charting library.
@@ -37,7 +38,7 @@
 - [ ] 2.0 Integrate Supabase client and server-side data access
   - [x] 2.1 Configure Supabase client initialization with secure environment variable handling.
   - [x] 2.2 Implement server-side data fetching utilities for transactions, category summaries, and balances.
-  - [ ] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
+  - [x] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
 - [ ] 3.0 Build dashboard layout and data wiring
   - [ ] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.

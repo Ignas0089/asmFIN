@@ -1,5 +1,12 @@
 import { getSupabaseServerClient } from "../supabase/server";
 import type { Database } from "../types";
+import {
+  createErrorResult,
+  createLoadingResult,
+  createSuccessResult,
+  DataResult,
+  executeWithRetry,
+} from "./queryHelpers";
 
 type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
@@ -15,6 +22,9 @@ export type TransactionWithCategory = TransactionRow & {
 
 export interface FetchRecentTransactionsOptions extends DateRange {
   limit?: number;
+  optimisticData?: TransactionWithCategory[];
+  retryAttempts?: number;
+  retryDelayMs?: number;
 }
 
 export interface BalanceSummary {
@@ -22,6 +32,12 @@ export interface BalanceSummary {
   totalExpense: number;
   net: number;
 }
+
+const DEFAULT_BALANCE_SUMMARY: BalanceSummary = {
+  totalIncome: 0,
+  totalExpense: 0,
+  net: 0,
+};
 
 export interface CategorySummary {
   categoryId: string | null;
@@ -33,174 +49,260 @@ export interface CategorySummary {
 
 export interface CategorySummaryOptions extends DateRange {
   limit?: number;
+  optimisticData?: CategorySummary[];
+  retryAttempts?: number;
+  retryDelayMs?: number;
+}
+
+export interface BalanceSummaryOptions extends DateRange {
+  optimisticData?: BalanceSummary;
+  retryAttempts?: number;
+  retryDelayMs?: number;
+}
+
+export interface DataLoadResult<T> {
+  loading: DataResult<T>;
+  result: DataResult<T>;
 }
 
 export async function fetchRecentTransactions(
   options: FetchRecentTransactionsOptions = {}
 ): Promise<TransactionWithCategory[]> {
-  const { limit = 10, startDate, endDate } = options;
-  const supabase = getSupabaseServerClient();
+  const { limit = 10, startDate, endDate, retryAttempts, retryDelayMs } = options;
 
-  let query = supabase
-    .from("transactions")
-    .select(
-      `
-        id,
-        occurred_on,
-        description,
-        amount,
-        type,
-        notes,
-        source,
-        created_at,
-        updated_at,
-        category:categories (
-          id,
-          name,
-          type,
-          color,
-          created_at,
-          updated_at
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseServerClient();
+
+      let query = supabase
+        .from("transactions")
+        .select(
+          `
+            id,
+            occurred_on,
+            description,
+            amount,
+            type,
+            notes,
+            source,
+            created_at,
+            updated_at,
+            category:categories (
+              id,
+              name,
+              type,
+              color,
+              created_at,
+              updated_at
+            )
+          `
         )
-      `
-    )
-    .order("occurred_on", { ascending: false })
-    .order("created_at", { ascending: false });
+        .order("occurred_on", { ascending: false })
+        .order("created_at", { ascending: false });
 
-  if (startDate) {
-    query = query.gte("occurred_on", startDate);
-  }
+      if (startDate) {
+        query = query.gte("occurred_on", startDate);
+      }
 
-  if (endDate) {
-    query = query.lte("occurred_on", endDate);
-  }
+      if (endDate) {
+        query = query.lte("occurred_on", endDate);
+      }
 
-  if (limit) {
-    query = query.limit(limit);
-  }
+      if (limit) {
+        query = query.limit(limit);
+      }
 
-  const { data, error } = await query.returns<TransactionWithCategory[]>();
+      const { data, error } = await query.returns<TransactionWithCategory[]>();
 
-  if (error) {
-    throw new Error(`Failed to load recent transactions: ${error.message}`);
-  }
+      if (error) {
+        throw new Error(`Failed to load recent transactions: ${error.message}`);
+      }
 
-  return data ?? [];
+      return data ?? [];
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
 }
 
 export async function fetchBalanceSummary(
-  range: DateRange = {}
+  range: BalanceSummaryOptions = {}
 ): Promise<BalanceSummary> {
-  const supabase = getSupabaseServerClient();
+  const { retryAttempts, retryDelayMs } = range;
 
-  let query = supabase
-    .from("transactions")
-    .select("type, total:amount.sum()", { group: "type" });
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseServerClient();
 
-  if (range.startDate) {
-    query = query.gte("occurred_on", range.startDate);
-  }
+      let query = supabase
+        .from("transactions")
+        .select("type, total:amount.sum()", { group: "type" });
 
-  if (range.endDate) {
-    query = query.lte("occurred_on", range.endDate);
-  }
+      if (range.startDate) {
+        query = query.gte("occurred_on", range.startDate);
+      }
 
-  const { data, error } = await query.returns<
-    { type: TransactionRow["type"]; total: number | null }[]
-  >();
+      if (range.endDate) {
+        query = query.lte("occurred_on", range.endDate);
+      }
 
-  if (error) {
-    throw new Error(`Failed to load balance summary: ${error.message}`);
-  }
+      const { data, error } = await query.returns<
+        { type: TransactionRow["type"]; total: number | null }[]
+      >();
 
-  const totals = data ?? [];
+      if (error) {
+        throw new Error(`Failed to load balance summary: ${error.message}`);
+      }
 
-  const totalIncome = totals.find((row) => row.type === "income")?.total ?? 0;
-  const totalExpense = totals.find((row) => row.type === "expense")?.total ?? 0;
+      const totals = data ?? [];
 
-  const incomeValue = Number(totalIncome) || 0;
-  const expenseValue = Number(totalExpense) || 0;
+      const totalIncome = totals.find((row) => row.type === "income")?.total ?? 0;
+      const totalExpense = totals.find((row) => row.type === "expense")?.total ?? 0;
 
-  return {
-    totalIncome: incomeValue,
-    totalExpense: expenseValue,
-    net: incomeValue - expenseValue,
-  };
+      const incomeValue = Number(totalIncome) || 0;
+      const expenseValue = Number(totalExpense) || 0;
+
+      return {
+        totalIncome: incomeValue,
+        totalExpense: expenseValue,
+        net: incomeValue - expenseValue,
+      };
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
 }
 
 export async function fetchCategorySummaries(
   options: CategorySummaryOptions = {}
 ): Promise<CategorySummary[]> {
-  const { startDate, endDate, limit } = options;
-  const supabase = getSupabaseServerClient();
+  const { startDate, endDate, limit, retryAttempts, retryDelayMs } = options;
 
-  let query = supabase
-    .from("transactions")
-    .select("category_id, type, total:amount.sum()", {
-      group: "category_id, type",
-    });
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseServerClient();
 
-  if (startDate) {
-    query = query.gte("occurred_on", startDate);
-  }
+      let query = supabase
+        .from("transactions")
+        .select("category_id, type, total:amount.sum()", {
+          group: "category_id, type",
+        });
 
-  if (endDate) {
-    query = query.lte("occurred_on", endDate);
-  }
+      if (startDate) {
+        query = query.gte("occurred_on", startDate);
+      }
 
-  const { data, error } = await query.returns<
-    { category_id: string | null; type: TransactionRow["type"]; total: number | null }[]
-  >();
+      if (endDate) {
+        query = query.lte("occurred_on", endDate);
+      }
 
-  if (error) {
-    throw new Error(`Failed to load category summaries: ${error.message}`);
-  }
+      const { data, error } = await query.returns<
+        { category_id: string | null; type: TransactionRow["type"]; total: number | null }[]
+      >();
 
-  const aggregate = data ?? [];
-  const categoryIds = Array.from(
-    new Set(
-      aggregate
-        .map((row) => row.category_id)
-        .filter((value): value is string => Boolean(value))
-    )
-  );
+      if (error) {
+        throw new Error(`Failed to load category summaries: ${error.message}`);
+      }
 
-  let categories: CategoryRow[] = [];
-  if (categoryIds.length > 0) {
-    const { data: categoryData, error: categoryError } = await supabase
-      .from("categories")
-      .select("*")
-      .in("id", categoryIds);
-
-    if (categoryError) {
-      throw new Error(
-        `Failed to load categories for summaries: ${categoryError.message}`
+      const aggregate = data ?? [];
+      const categoryIds = Array.from(
+        new Set(
+          aggregate
+            .map((row) => row.category_id)
+            .filter((value): value is string => Boolean(value))
+        )
       );
+
+      let categories: CategoryRow[] = [];
+      if (categoryIds.length > 0) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("categories")
+          .select("*")
+          .in("id", categoryIds);
+
+        if (categoryError) {
+          throw new Error(
+            `Failed to load categories for summaries: ${categoryError.message}`
+          );
+        }
+
+        categories = categoryData ?? [];
+      }
+
+      const byId = new Map(categories.map((category) => [category.id, category]));
+
+      const summaries = aggregate
+        .map<CategorySummary>((row) => {
+          const category = row.category_id
+            ? byId.get(row.category_id) ?? null
+            : null;
+          const fallbackName = row.category_id ? "Unknown" : "Uncategorized";
+
+          return {
+            categoryId: row.category_id,
+            name: category?.name ?? fallbackName,
+            type: category?.type ?? row.type,
+            color: category?.color ?? null,
+            total: Number(row.total) || 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+
+      if (limit && limit > 0) {
+        return summaries.slice(0, limit);
+      }
+
+      return summaries;
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
     }
+  );
+}
 
-    categories = categoryData ?? [];
+export async function loadRecentTransactions(
+  options: FetchRecentTransactionsOptions = {}
+): Promise<DataLoadResult<TransactionWithCategory[]>> {
+  const optimisticData = options.optimisticData ?? [];
+  const loading = createLoadingResult(optimisticData);
+
+  try {
+    const data = await fetchRecentTransactions(options);
+    return { loading, result: createSuccessResult(data) };
+  } catch (error) {
+    return { loading, result: createErrorResult(optimisticData, error) };
   }
+}
 
-  const byId = new Map(categories.map((category) => [category.id, category]));
+export async function loadBalanceSummary(
+  options: BalanceSummaryOptions = {}
+): Promise<DataLoadResult<BalanceSummary>> {
+  const optimisticData = options.optimisticData ?? DEFAULT_BALANCE_SUMMARY;
+  const loading = createLoadingResult(optimisticData);
 
-  const summaries = aggregate
-    .map<CategorySummary>((row) => {
-      const category = row.category_id ? byId.get(row.category_id) ?? null : null;
-      const fallbackName = row.category_id ? "Unknown" : "Uncategorized";
-
-      return {
-        categoryId: row.category_id,
-        name: category?.name ?? fallbackName,
-        type: category?.type ?? row.type,
-        color: category?.color ?? null,
-        total: Number(row.total) || 0,
-      };
-    })
-    .sort((a, b) => b.total - a.total);
-
-  if (limit && limit > 0) {
-    return summaries.slice(0, limit);
+  try {
+    const data = await fetchBalanceSummary(options);
+    return { loading, result: createSuccessResult(data) };
+  } catch (error) {
+    return { loading, result: createErrorResult(optimisticData, error) };
   }
+}
 
-  return summaries;
+export async function loadCategorySummaries(
+  options: CategorySummaryOptions = {}
+): Promise<DataLoadResult<CategorySummary[]>> {
+  const optimisticData = options.optimisticData ?? [];
+  const loading = createLoadingResult(optimisticData);
+
+  try {
+    const data = await fetchCategorySummaries(options);
+    return { loading, result: createSuccessResult(data) };
+  } catch (error) {
+    return { loading, result: createErrorResult(optimisticData, error) };
+  }
 }
