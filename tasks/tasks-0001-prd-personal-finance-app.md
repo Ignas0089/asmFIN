@@ -3,7 +3,12 @@
 - `docs/0001-data-model-review.md` - Notes confirming entities derived from the PRD.
 - `supabase/migrations/*` - SQL migration scripts defining database schema changes for finance entities.
 - `supabase/seed.sql` - Development fixture inserts for categories and transactions.
+- `.env.example` - Documented Supabase environment variables required by the web app.
+- `package.json` - Workspace root scripts delegating to the web application.
+- `apps/web/package.json` - Next.js app package definition and scripts.
 - `supabase/functions/sync_transactions.ts` - Edge function to validate and insert imported transactions.
+- `apps/web/lib/env.ts` - Centralized environment variable validation shared by client and server utilities.
+- `apps/web/lib/types.ts` - Shared Supabase-generated types for strongly typed queries.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
 - `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
 - `apps/web/components/BalanceOverview.tsx` - Summary card component displaying key financial metrics.
@@ -28,7 +33,7 @@
   - [x] 1.3 Seed development fixtures (sample categories, transactions) for testing the dashboard.
 
 - [ ] 2.0 Integrate Supabase client and server-side data access
-  - [ ] 2.1 Configure Supabase client initialization with secure environment variable handling.
+  - [x] 2.1 Configure Supabase client initialization with secure environment variable handling.
   - [ ] 2.2 Implement server-side data fetching utilities for transactions, category summaries, and balances.
   - [ ] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
