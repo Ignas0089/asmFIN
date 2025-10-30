@@ -10,7 +10,7 @@ const browserEnvSchema = z
       .string()
       .min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required")
   })
-  .passthrough();
+
 
 const serverEnvSchema = browserEnvSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z
