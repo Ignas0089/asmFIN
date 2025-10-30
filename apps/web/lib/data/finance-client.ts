@@ -4,9 +4,15 @@ import type {
   BalanceSummaryOptions,
   CategorySummary,
   CategorySummaryOptions,
+  IncomeExpenseTrendOptions,
+  IncomeExpenseTrendPoint,
   FetchRecentTransactionsOptions,
   TransactionWithCategory,
   UpcomingBillsOptions,
+} from "./finance";
+import {
+  buildIncomeExpenseTrend,
+  resolveTrendRange,
 } from "./finance";
 import {
   createErrorResult,
@@ -290,10 +296,43 @@ export async function fetchCategorySummariesClient(
   );
 }
 
+export async function fetchIncomeExpenseTrendClient(
+  options: IncomeExpenseTrendOptions = {}
+): Promise<IncomeExpenseTrendPoint[]> {
+  const { retryAttempts, retryDelayMs } = options;
+  const range = resolveTrendRange(options);
+
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseBrowserClient();
+
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("occurred_on, amount, type")
+        .gte("occurred_on", range.startDate)
+        .lte("occurred_on", range.endDate)
+        .order("occurred_on", { ascending: true })
+        .returns<Pick<TransactionWithCategory, "occurred_on" | "amount" | "type">[]>();
+
+      if (error) {
+        throw toError(`Failed to load trend data: ${error.message}`);
+      }
+
+      const rows = data ?? [];
+      return buildIncomeExpenseTrend(rows, { start: range.start, end: range.end });
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
+}
+
 export interface DashboardDataResults {
   balance: DataResult<BalanceSummary>;
   transactions: DataResult<TransactionWithCategory[]>;
   upcoming: DataResult<TransactionWithCategory[]>;
+  trend: DataResult<IncomeExpenseTrendPoint[]>;
 }
 
 export async function loadDashboardDataClient(): Promise<DashboardDataResults> {
@@ -304,24 +343,28 @@ export async function loadDashboardDataClient(): Promise<DashboardDataResults> {
   });
   const loadingTransactions = createLoadingResult<TransactionWithCategory[]>([]);
   const loadingUpcoming = createLoadingResult<TransactionWithCategory[]>([]);
+  const loadingTrend = createLoadingResult<IncomeExpenseTrendPoint[]>([]);
 
   try {
-    const [balance, transactions, upcoming] = await Promise.all([
+    const [balance, transactions, upcoming, trend] = await Promise.all([
       fetchBalanceSummaryClient(),
       fetchRecentTransactionsClient({ limit: 5 }),
       fetchUpcomingBillsClient({ limit: 5 }),
+      fetchIncomeExpenseTrendClient(),
     ]);
 
     return {
       balance: createSuccessResult(balance),
       transactions: createSuccessResult(transactions),
       upcoming: createSuccessResult(upcoming),
+      trend: createSuccessResult(trend),
     };
   } catch (error) {
     return {
       balance: createErrorResult(loadingBalance.data, error),
       transactions: createErrorResult(loadingTransactions.data, error),
       upcoming: createErrorResult(loadingUpcoming.data, error),
+      trend: createErrorResult(loadingTrend.data, error),
     };
   }
 }

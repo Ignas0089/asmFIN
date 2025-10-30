@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   BalanceSummary,
   CategorySummary,
+  IncomeExpenseTrendPoint,
   TransactionWithCategory,
 } from "../../lib/data/finance";
 import type { DataResult } from "../../lib/data/queryHelpers";
@@ -16,6 +17,7 @@ import {
 import {
   fetchBalanceSummaryClient,
   fetchCategorySummariesClient,
+  fetchIncomeExpenseTrendClient,
   fetchRecentTransactionsClient,
   fetchUpcomingBillsClient,
 } from "../../lib/data/finance-client";
@@ -24,6 +26,11 @@ import { SummaryCard } from "./SummaryCard";
 import { RecentTransactionsList } from "./RecentTransactionsList";
 import { UpcomingBillsList } from "./UpcomingBillsList";
 import { SpendingByCategoryChart } from "./SpendingByCategoryChart";
+import { IncomeExpenseTrendChart } from "./IncomeExpenseTrendChart";
+import {
+  getTrendRangeMonths,
+  type TrendRangeValue,
+} from "../../lib/dashboard/trendRanges";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -32,6 +39,8 @@ export interface DashboardOverviewClientProps {
   initialRecentTransactions: DataResult<TransactionWithCategory[]>;
   initialUpcomingBills: DataResult<TransactionWithCategory[]>;
   initialCategorySummaries: DataResult<CategorySummary[]>;
+  initialTrend: DataResult<IncomeExpenseTrendPoint[]>;
+  initialTrendRange?: TrendRangeValue;
 }
 
 export function DashboardOverviewClient({
@@ -39,6 +48,8 @@ export function DashboardOverviewClient({
   initialRecentTransactions,
   initialUpcomingBills,
   initialCategorySummaries,
+  initialTrend,
+  initialTrendRange = "6m",
 }: DashboardOverviewClientProps) {
   const [balanceResult, setBalanceResult] = useState(initialBalance);
   const [recentTransactionsResult, setRecentTransactionsResult] = useState(
@@ -50,9 +61,14 @@ export function DashboardOverviewClient({
   const [categorySummariesResult, setCategorySummariesResult] = useState(
     initialCategorySummaries
   );
+  const [trendResult, setTrendResult] = useState(initialTrend);
+  const [trendRange, setTrendRange] = useState<TrendRangeValue>(
+    initialTrendRange
+  );
 
   const isMountedRef = useRef(true);
   const refreshInFlightRef = useRef(false);
+  const trendRangeRef = useRef(trendRange);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -61,6 +77,10 @@ export function DashboardOverviewClient({
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    trendRangeRef.current = trendRange;
+  }, [trendRange]);
 
   const refreshData = useCallback(async () => {
     if (refreshInFlightRef.current) {
@@ -75,14 +95,19 @@ export function DashboardOverviewClient({
     );
     setUpcomingBillsResult((previous) => createLoadingResult(previous.data));
     setCategorySummariesResult((previous) => createLoadingResult(previous.data));
+    setTrendResult((previous) => createLoadingResult(previous.data));
 
     try {
-      const [balance, transactions, upcoming, categories] = await Promise.all([
-        fetchBalanceSummaryClient(),
-        fetchRecentTransactionsClient({ limit: 5 }),
-        fetchUpcomingBillsClient({ limit: 5 }),
-        fetchCategorySummariesClient({ limit: 8 }),
-      ]);
+      const [balance, transactions, upcoming, categories, trend] =
+        await Promise.all([
+          fetchBalanceSummaryClient(),
+          fetchRecentTransactionsClient({ limit: 5 }),
+          fetchUpcomingBillsClient({ limit: 5 }),
+          fetchCategorySummariesClient({ limit: 8 }),
+          fetchIncomeExpenseTrendClient({
+            months: getTrendRangeMonths(trendRangeRef.current),
+          }),
+        ]);
 
       if (!isMountedRef.current) {
         return;
@@ -92,6 +117,7 @@ export function DashboardOverviewClient({
       setRecentTransactionsResult(createSuccessResult(transactions));
       setUpcomingBillsResult(createSuccessResult(upcoming));
       setCategorySummariesResult(createSuccessResult(categories));
+      setTrendResult(createSuccessResult(trend));
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -107,6 +133,7 @@ export function DashboardOverviewClient({
       setCategorySummariesResult((previous) =>
         createErrorResult(previous.data, error)
       );
+      setTrendResult((previous) => createErrorResult(previous.data, error));
     } finally {
       refreshInFlightRef.current = false;
     }
@@ -162,6 +189,37 @@ export function DashboardOverviewClient({
     [categorySummariesResult.data]
   );
 
+  const handleTrendRangeChange = useCallback(
+    async (value: TrendRangeValue) => {
+      if (value === trendRangeRef.current) {
+        return;
+      }
+
+      trendRangeRef.current = value;
+      setTrendRange(value);
+      setTrendResult((previous) => createLoadingResult(previous.data));
+
+      try {
+        const trend = await fetchIncomeExpenseTrendClient({
+          months: getTrendRangeMonths(value),
+        });
+
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        setTrendResult(createSuccessResult(trend));
+      } catch (error) {
+        if (!isMountedRef.current) {
+          return;
+        }
+
+        setTrendResult((previous) => createErrorResult(previous.data, error));
+      }
+    },
+    []
+  );
+
   return (
     <section className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -194,6 +252,14 @@ export function DashboardOverviewClient({
           accentLabel={`${upcomingBillsResult.data.length} due`}
         />
       </div>
+
+      <IncomeExpenseTrendChart
+        points={trendResult.data}
+        isLoading={trendResult.status === "loading"}
+        error={trendResult.error}
+        selectedRange={trendRange}
+        onRangeChange={handleTrendRangeChange}
+      />
 
       {balanceResult.status === "error" && balanceResult.error ? (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">

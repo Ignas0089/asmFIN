@@ -67,6 +67,20 @@ export interface BalanceSummaryOptions extends DateRange {
   retryDelayMs?: number;
 }
 
+export interface IncomeExpenseTrendPoint {
+  date: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+export interface IncomeExpenseTrendOptions extends DateRange {
+  months?: number;
+  optimisticData?: IncomeExpenseTrendPoint[];
+  retryAttempts?: number;
+  retryDelayMs?: number;
+}
+
 export interface DataLoadResult<T> {
   loading: DataResult<T>;
   result: DataResult<T>;
@@ -74,6 +88,134 @@ export interface DataLoadResult<T> {
 
 function getIsoDate(value: Date) {
   return value.toISOString().slice(0, 10);
+}
+
+function parseDateOnly(value: string): Date {
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+
+  if (
+    Number.isFinite(year) &&
+    Number.isFinite(month) &&
+    Number.isFinite(day)
+  ) {
+    return new Date(Date.UTC(year, month - 1, day));
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? new Date(Date.UTC(1970, 0, 1))
+    : parsed;
+}
+
+function startOfMonth(value: Date): Date {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), 1));
+}
+
+function addMonths(value: Date, amount: number): Date {
+  return new Date(
+    Date.UTC(value.getUTCFullYear(), value.getUTCMonth() + amount, 1)
+  );
+}
+
+function clampMonths(months?: number): number {
+  if (!months || months < 1) {
+    return 6;
+  }
+
+  return Math.min(months, 24);
+}
+
+function createMonthlyBuckets(
+  start: Date,
+  end: Date
+): Map<string, IncomeExpenseTrendPoint> {
+  const buckets = new Map<string, IncomeExpenseTrendPoint>();
+  let current = startOfMonth(start);
+  const last = startOfMonth(end);
+
+  while (current.getTime() <= last.getTime()) {
+    const key = getIsoDate(current);
+    buckets.set(key, { date: key, income: 0, expense: 0, net: 0 });
+    current = addMonths(current, 1);
+  }
+
+  return buckets;
+}
+
+export function resolveTrendRange(
+  options: IncomeExpenseTrendOptions = {}
+): { startDate: string; endDate: string; start: Date; end: Date } {
+  const months = clampMonths(options.months);
+
+  const rawEnd = options.endDate
+    ? parseDateOnly(options.endDate)
+    : new Date();
+  const bucketEnd = startOfMonth(rawEnd);
+
+  const computedStart = addMonths(bucketEnd, -(months - 1));
+  const rawStart = options.startDate
+    ? parseDateOnly(options.startDate)
+    : computedStart;
+  const bucketStartCandidate = startOfMonth(rawStart);
+
+  const bucketStart =
+    bucketStartCandidate.getTime() > bucketEnd.getTime()
+      ? bucketEnd
+      : bucketStartCandidate;
+
+  let queryStart = options.startDate ? rawStart : bucketStart;
+  if (queryStart.getTime() > rawEnd.getTime()) {
+    queryStart = rawEnd;
+  }
+
+  const queryStartDate = getIsoDate(queryStart);
+  const queryEndDate = getIsoDate(rawEnd);
+
+  return {
+    startDate: queryStartDate,
+    endDate: queryEndDate,
+    start: bucketStart,
+    end: bucketEnd,
+  };
+}
+
+export function buildIncomeExpenseTrend(
+  rows: TrendRow[],
+  range: { start: Date; end: Date }
+): IncomeExpenseTrendPoint[] {
+  const buckets = createMonthlyBuckets(range.start, range.end);
+
+  for (const row of rows) {
+    const occurredOn = startOfMonth(parseDateOnly(row.occurred_on));
+
+    if (
+      occurredOn.getTime() < range.start.getTime() ||
+      occurredOn.getTime() > range.end.getTime()
+    ) {
+      continue;
+    }
+
+    const key = getIsoDate(occurredOn);
+    const bucket = buckets.get(key);
+
+    if (!bucket) {
+      continue;
+    }
+
+    const amount = Number(row.amount) || 0;
+
+    if (row.type === "income") {
+      bucket.income += amount;
+    } else {
+      bucket.expense += amount;
+    }
+
+    bucket.net = bucket.income - bucket.expense;
+  }
+
+  return Array.from(buckets.values()).sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
 }
 
 export async function fetchRecentTransactions(
@@ -345,6 +487,38 @@ export async function fetchCategorySummaries(
   );
 }
 
+export async function fetchIncomeExpenseTrend(
+  options: IncomeExpenseTrendOptions = {}
+): Promise<IncomeExpenseTrendPoint[]> {
+  const { retryAttempts, retryDelayMs } = options;
+  const range = resolveTrendRange(options);
+
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseServerClient();
+
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("occurred_on, amount, type")
+        .gte("occurred_on", range.startDate)
+        .lte("occurred_on", range.endDate)
+        .order("occurred_on", { ascending: true })
+        .returns<Pick<TransactionRow, "occurred_on" | "amount" | "type">[]>();
+
+      if (error) {
+        throw new Error(`Failed to load trend data: ${error.message}`);
+      }
+
+      const rows = data ?? [];
+      return buildIncomeExpenseTrend(rows, { start: range.start, end: range.end });
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
+}
+
 export async function loadRecentTransactions(
   options: FetchRecentTransactionsOptions = {}
 ): Promise<DataLoadResult<TransactionWithCategory[]>> {
@@ -381,6 +555,20 @@ export async function loadCategorySummaries(
 
   try {
     const data = await fetchCategorySummaries(options);
+    return { loading, result: createSuccessResult(data) };
+  } catch (error) {
+    return { loading, result: createErrorResult(optimisticData, error) };
+  }
+}
+
+export async function loadIncomeExpenseTrend(
+  options: IncomeExpenseTrendOptions = {}
+): Promise<DataLoadResult<IncomeExpenseTrendPoint[]>> {
+  const optimisticData = options.optimisticData ?? [];
+  const loading = createLoadingResult(optimisticData);
+
+  try {
+    const data = await fetchIncomeExpenseTrend(options);
     return { loading, result: createSuccessResult(data) };
   } catch (error) {
     return { loading, result: createErrorResult(optimisticData, error) };
