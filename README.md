@@ -183,13 +183,6 @@ For other AI-powered IDEs or CLIs:
 * **Correct File Tagging:** Always ensure you're accurately tagging the PRD filename (e.g., `@MyFeature-PRD.md`) when generating tasks.
 * **Patience and Iteration:** AI is a powerful tool, but it's not magic. Be prepared to guide, correct, and iterate. This workflow is designed to make that iteration process smoother.
 
-## 🐞 Bug Report
-
-* **File:** `apps/web/lib/env.ts`
-* **Line:** 11
-* **Description:** The `browserEnvSchema` uses the `.passthrough()` method from the Zod library. This allows any environment variables to be passed through the schema, even if they are not explicitly defined. This is a security risk because it can lead to server-side secrets being leaked to the client.
-* **Fix:** The `.passthrough()` method has been removed from the `browserEnvSchema`. This ensures that only the explicitly defined environment variables are passed to the client.
-
 ## 🤝 Contributing
 
 Got ideas to improve these `.md` files or have new ones that fit this workflow? Contributions are welcome!

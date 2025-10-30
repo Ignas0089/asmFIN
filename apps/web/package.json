@@ -6,14 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "NEXT_PUBLIC_SUPABASE_URL='http://localhost:54321' NEXT_PUBLIC_SUPABASE_ANON_KEY='anon_key' SECRET_KEY='a-secret-key' tsx lib/env.test.ts"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.43.1",
     "next": "^14.2.3",
-    "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.23.8"
@@ -24,8 +22,6 @@
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.3",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.20.6",
     "typescript": "^5.4.5"
   }
 }
