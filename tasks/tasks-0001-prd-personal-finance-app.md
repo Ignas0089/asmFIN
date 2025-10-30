@@ -65,7 +65,7 @@
 
 - [ ] 5.0 Support CSV transaction import workflow
   - [x] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
-  - [ ] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
+  - [x] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
   - [ ] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
   - [ ] 5.4 Wire import results into dashboard tables and trigger refresh on completion.
 
