@@ -42,6 +42,9 @@
 - `apps/web/components/dashboard/SpendingByCategoryChart.test.tsx` - Component coverage for spending chart states and totals.
 - `apps/web/components/dashboard/IncomeExpenseTrendChart.test.tsx` - Component coverage for income vs. expense trend widget.
 - `apps/web/components/dashboard/TransactionImportPanel.test.tsx` - Component coverage for CSV import UI flows.
+- `apps/web/playwright.config.ts` - Playwright configuration for running smoke and end-to-end scenarios.
+- `apps/web/tests/e2e/smoke.spec.ts` - E2E smoke test verifying sign-in, dashboard data, and CSV import flow.
+- `apps/web/tests/e2e/fixtures/sample-transactions.csv` - Fixture used by the end-to-end CSV import smoke test.
 
 ### Notes
 
@@ -80,5 +83,5 @@
 - [ ] 6.0 Implement automated testing and quality gates
   - [x] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
   - [x] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
-  - [ ] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
+  - [x] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
   - [ ] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.

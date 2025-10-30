@@ -9,6 +9,7 @@
     "build": "npm --workspace apps/web run build",
     "dev": "npm --workspace apps/web run dev",
     "lint": "npm --workspace apps/web run lint",
-    "test": "npm --workspace apps/web run test"
+    "test": "npm --workspace apps/web run test",
+    "e2e": "npm --workspace apps/web run e2e"
   }
 }
