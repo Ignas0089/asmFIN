@@ -22,7 +22,7 @@
 
 - [ ] 1.0 Define and migrate the personal finance database schema
   - [ ] 1.1 Review PRD data requirements to confirm necessary entities (accounts, categories, transactions, budgets).
-  - [ ] 1.2 Create Supabase SQL migrations for tables, relationships, constraints, and enum types.
+  - [x] 1.2 Create Supabase SQL migrations for tables, relationships, constraints, and enum types.
   - [ ] 1.3 Seed development fixtures (sample accounts, categories, transactions) for testing the dashboard.
 
 - [ ] 2.0 Integrate Supabase client and server-side data access
