@@ -6,7 +6,7 @@
 - `.env.example` - Documented Supabase environment variables required by the web app.
 - `package.json` - Workspace root scripts delegating to the web application.
 - `apps/web/package.json` - Next.js app package definition and scripts.
-- `supabase/functions/sync_transactions.ts` - Edge function to validate and insert imported transactions.
+- `supabase/functions/sync_transactions/index.ts` - Edge function to validate and insert imported transactions.
 - `apps/web/lib/env.ts` - Centralized environment variable validation shared by client and server utilities.
 - `apps/web/lib/types.ts` - Shared Supabase-generated types for strongly typed queries.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
@@ -66,7 +66,7 @@
 - [ ] 5.0 Support CSV transaction import workflow
   - [x] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
   - [x] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
-  - [ ] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
+  - [x] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
   - [ ] 5.4 Wire import results into dashboard tables and trigger refresh on completion.
 
 - [ ] 6.0 Implement automated testing and quality gates
