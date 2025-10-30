@@ -280,7 +280,7 @@ export function DashboardOverviewClient({
             isLoading={upcomingBillsResult.status === "loading"}
             error={upcomingBillsResult.error}
           />
-          <TransactionImportPanel />
+          <TransactionImportPanel onImportComplete={refreshData} />
         </div>
         <SpendingByCategoryChart
           summaries={spendingSummaries}
