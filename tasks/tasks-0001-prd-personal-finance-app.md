@@ -13,11 +13,12 @@
 - `apps/web/lib/supabase/server.ts` - Supabase server-side client for trusted data fetching.
 - `apps/web/lib/data/finance.ts` - Typed data-access helpers for dashboard metrics and tables.
 - `apps/web/lib/data/queryHelpers.ts` - Shared helpers for retryable Supabase queries and async states.
-- `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
-- `apps/web/components/BalanceOverview.tsx` - Summary card component displaying key financial metrics.
-- `apps/web/components/SpendingChart.tsx` - Chart component rendering categorized spending using charting library.
-- `apps/web/components/IncomeVsExpenseChart.tsx` - Chart visualizing income versus expenses over time.
-- `apps/web/components/TransactionsTable.tsx` - Tabular view of transactions with pagination and filters.
+- `apps/web/app/(dashboard)/dashboard/layout.tsx` - Dashboard shell with navigation and auth guard.
+- `apps/web/app/(dashboard)/dashboard/page.tsx` - Entry overview route for dashboard content.
+- `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
+- `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
+- `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
+- `apps/web/middleware.ts` - Supabase middleware to hydrate auth session cookies.
 - `apps/web/lib/csv/importTransactions.ts` - Utility for parsing and normalizing uploaded CSV transaction data.
 - `apps/web/tests/dashboard.spec.tsx` - Integration tests covering dashboard interactions and data flow.
 - `apps/web/tests/import.spec.ts` - Tests validating CSV import and Supabase persistence logic.
@@ -41,7 +42,7 @@
   - [x] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
 - [ ] 3.0 Build dashboard layout and data wiring
-  - [ ] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
+  - [x] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
   - [ ] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
   - [ ] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
 
