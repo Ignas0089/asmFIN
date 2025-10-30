@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   BalanceSummary,
+  CategorySummary,
   TransactionWithCategory,
 } from "../../lib/data/finance";
 import type { DataResult } from "../../lib/data/queryHelpers";
@@ -14,6 +15,7 @@ import {
 } from "../../lib/data/queryHelpers";
 import {
   fetchBalanceSummaryClient,
+  fetchCategorySummariesClient,
   fetchRecentTransactionsClient,
   fetchUpcomingBillsClient,
 } from "../../lib/data/finance-client";
@@ -21,6 +23,7 @@ import { getSupabaseBrowserClient } from "../../lib/supabase/client";
 import { SummaryCard } from "./SummaryCard";
 import { RecentTransactionsList } from "./RecentTransactionsList";
 import { UpcomingBillsList } from "./UpcomingBillsList";
+import { SpendingByCategoryChart } from "./SpendingByCategoryChart";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -28,12 +31,14 @@ export interface DashboardOverviewClientProps {
   initialBalance: DataResult<BalanceSummary>;
   initialRecentTransactions: DataResult<TransactionWithCategory[]>;
   initialUpcomingBills: DataResult<TransactionWithCategory[]>;
+  initialCategorySummaries: DataResult<CategorySummary[]>;
 }
 
 export function DashboardOverviewClient({
   initialBalance,
   initialRecentTransactions,
   initialUpcomingBills,
+  initialCategorySummaries,
 }: DashboardOverviewClientProps) {
   const [balanceResult, setBalanceResult] = useState(initialBalance);
   const [recentTransactionsResult, setRecentTransactionsResult] = useState(
@@ -41,6 +46,9 @@ export function DashboardOverviewClient({
   );
   const [upcomingBillsResult, setUpcomingBillsResult] = useState(
     initialUpcomingBills
+  );
+  const [categorySummariesResult, setCategorySummariesResult] = useState(
+    initialCategorySummaries
   );
 
   const isMountedRef = useRef(true);
@@ -66,12 +74,14 @@ export function DashboardOverviewClient({
       createLoadingResult(previous.data)
     );
     setUpcomingBillsResult((previous) => createLoadingResult(previous.data));
+    setCategorySummariesResult((previous) => createLoadingResult(previous.data));
 
     try {
-      const [balance, transactions, upcoming] = await Promise.all([
+      const [balance, transactions, upcoming, categories] = await Promise.all([
         fetchBalanceSummaryClient(),
         fetchRecentTransactionsClient({ limit: 5 }),
         fetchUpcomingBillsClient({ limit: 5 }),
+        fetchCategorySummariesClient({ limit: 8 }),
       ]);
 
       if (!isMountedRef.current) {
@@ -81,6 +91,7 @@ export function DashboardOverviewClient({
       setBalanceResult(createSuccessResult(balance));
       setRecentTransactionsResult(createSuccessResult(transactions));
       setUpcomingBillsResult(createSuccessResult(upcoming));
+      setCategorySummariesResult(createSuccessResult(categories));
     } catch (error) {
       if (!isMountedRef.current) {
         return;
@@ -91,6 +102,9 @@ export function DashboardOverviewClient({
         createErrorResult(previous.data, error)
       );
       setUpcomingBillsResult((previous) =>
+        createErrorResult(previous.data, error)
+      );
+      setCategorySummariesResult((previous) =>
         createErrorResult(previous.data, error)
       );
     } finally {
@@ -143,6 +157,11 @@ export function DashboardOverviewClient({
     [upcomingBillsResult.data]
   );
 
+  const spendingSummaries = useMemo(
+    () => categorySummariesResult.data,
+    [categorySummariesResult.data]
+  );
+
   return (
     <section className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -182,16 +201,23 @@ export function DashboardOverviewClient({
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RecentTransactionsList
-          transactions={recentTransactionsResult.data.slice(0, 5)}
-          isLoading={recentTransactionsResult.status === "loading"}
-          error={recentTransactionsResult.error}
-        />
-        <UpcomingBillsList
-          bills={upcomingBillsResult.data}
-          isLoading={upcomingBillsResult.status === "loading"}
-          error={upcomingBillsResult.error}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RecentTransactionsList
+            transactions={recentTransactionsResult.data.slice(0, 5)}
+            isLoading={recentTransactionsResult.status === "loading"}
+            error={recentTransactionsResult.error}
+          />
+          <UpcomingBillsList
+            bills={upcomingBillsResult.data}
+            isLoading={upcomingBillsResult.status === "loading"}
+            error={upcomingBillsResult.error}
+          />
+        </div>
+        <SpendingByCategoryChart
+          summaries={spendingSummaries}
+          isLoading={categorySummariesResult.status === "loading"}
+          error={categorySummariesResult.error}
         />
       </div>
     </section>

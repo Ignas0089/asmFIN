@@ -2,6 +2,8 @@ import { getSupabaseBrowserClient } from "../supabase/client";
 import type {
   BalanceSummary,
   BalanceSummaryOptions,
+  CategorySummary,
+  CategorySummaryOptions,
   FetchRecentTransactionsOptions,
   TransactionWithCategory,
   UpcomingBillsOptions,
@@ -190,6 +192,96 @@ export async function fetchBalanceSummaryClient(
         totalExpense: expenseValue,
         net: incomeValue - expenseValue,
       };
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
+}
+
+export async function fetchCategorySummariesClient(
+  options: CategorySummaryOptions = {}
+): Promise<CategorySummary[]> {
+  const { startDate, endDate, limit, retryAttempts, retryDelayMs } = options;
+
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseBrowserClient();
+
+      let query = supabase
+        .from("transactions")
+        .select("category_id, total:amount.sum()", { group: "category_id" })
+        .eq("type", "expense");
+
+      if (startDate) {
+        query = query.gte("occurred_on", startDate);
+      }
+
+      if (endDate) {
+        query = query.lte("occurred_on", endDate);
+      }
+
+      const { data, error } = await query.returns<
+        { category_id: string | null; total: number | null }[]
+      >();
+
+      if (error) {
+        throw toError(`Failed to load category summaries: ${error.message}`);
+      }
+
+      const aggregate = data ?? [];
+      const categoryIds = Array.from(
+        new Set(
+          aggregate
+            .map((row) => row.category_id)
+            .filter((value): value is string => Boolean(value))
+        )
+      );
+
+      let categories: { id: string; name: string; color: string | null }[] = [];
+
+      if (categoryIds.length > 0) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("categories")
+          .select("id, name, color")
+          .in("id", categoryIds);
+
+        if (categoryError) {
+          throw toError(
+            `Failed to load categories for summaries: ${categoryError.message}`
+          );
+        }
+
+        categories = categoryData ?? [];
+      }
+
+      const categoriesById = new Map(categories.map((item) => [item.id, item]));
+
+      const summaries = aggregate
+        .map<CategorySummary>((row) => {
+          const category = row.category_id
+            ? categoriesById.get(row.category_id) ?? null
+            : null;
+
+          const fallbackName = row.category_id ? "Other" : "Uncategorized";
+
+          return {
+            categoryId: row.category_id,
+            name: category?.name ?? fallbackName,
+            type: "expense",
+            color: category?.color ?? null,
+            total: Number(row.total) || 0,
+          };
+        })
+        .filter((summary) => summary.total > 0)
+        .sort((a, b) => b.total - a.total);
+
+      if (limit && limit > 0) {
+        return summaries.slice(0, limit);
+      }
+
+      return summaries;
     },
     {
       retries: retryAttempts ?? 2,

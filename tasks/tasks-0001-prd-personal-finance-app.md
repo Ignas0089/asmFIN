@@ -18,6 +18,7 @@
 - `apps/web/app/(dashboard)/dashboard/layout.tsx` - Dashboard shell with navigation and auth guard.
 - `apps/web/app/(dashboard)/dashboard/page.tsx` - Entry overview route for dashboard content.
 - `apps/web/components/dashboard/DashboardOverviewClient.tsx` - Client-side dashboard orchestrator handling live updates.
+- `apps/web/components/dashboard/SpendingByCategoryChart.tsx` - Recharts-powered spending distribution widget for the dashboard.
 - `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
 - `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
 - `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
@@ -53,7 +54,7 @@
   - [x] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
 
 - [ ] 4.0 Implement financial charts and visualizations
-  - [ ] 4.1 Develop spending by category chart using reusable chart component and responsive design.
+- [x] 4.1 Develop spending by category chart using reusable chart component and responsive design.
   - [ ] 4.2 Create income versus expenses trend chart with time range selector.
   - [ ] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
 
