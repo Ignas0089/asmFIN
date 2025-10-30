@@ -4,10 +4,13 @@ import { redirect } from "next/navigation";
 
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
-import { DashboardHeader } from "../../../../components/dashboard/DashboardHeader";
-import { DashboardNavigation } from "../../../../components/dashboard/DashboardNavigation";
-import { dashboardNavItems } from "../../../../components/dashboard/navigationConfig";
-import type { Database } from "../../../../lib/types";
+import { DashboardHeader } from "../../../components/dashboard/DashboardHeader";
+import { DashboardNavigation } from "../../../components/dashboard/DashboardNavigation";
+import {
+  dashboardNavItems,
+  type DashboardNavItem,
+} from "../../../components/dashboard/navigationConfig";
+import type { Database } from "../../../lib/types";
 
 export default async function DashboardLayout({
   children
@@ -49,7 +52,7 @@ export default async function DashboardLayout({
         </main>
         <div className="border-t border-slate-200 bg-white px-2 py-2 lg:hidden">
           <DashboardNavigation
-            items={dashboardNavItems.map((item) => ({
+            items={dashboardNavItems.map((item): DashboardNavItem => ({
               ...item,
               description:
                 item.label === "Overview"

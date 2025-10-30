@@ -48,12 +48,19 @@ function SpendingTooltip({ active, payload }: TooltipProps<number, string>) {
     return null;
   }
 
-  const [{ name, value }] = payload;
-  const formattedValue = typeof value === "number" ? formatCurrency(value) : value;
+  const [entry] = payload as Array<{ name?: string; value?: number | string }>;
+  if (!entry || typeof entry.name !== "string") {
+    return null;
+  }
+
+  const formattedValue =
+    typeof entry.value === "number"
+      ? formatCurrency(entry.value)
+      : entry.value ?? "";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs shadow">
-      <p className="font-semibold text-slate-900">{name}</p>
+      <p className="font-semibold text-slate-900">{entry.name}</p>
       <p className="text-slate-600">{formattedValue}</p>
     </div>
   );

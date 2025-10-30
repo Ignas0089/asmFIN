@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
 
-import { getSupabaseBrowserClient } from "../../../../lib/supabase/client";
+import { getSupabaseBrowserClient } from "../../../lib/supabase/client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function SignInPage() {
   useEffect(() => {
     const {
       data: { subscription }
-    } = supabase.auth.onAuthStateChange((event) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
       if (event === "SIGNED_IN") {
         router.replace("/dashboard");
         router.refresh();

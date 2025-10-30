@@ -4,12 +4,12 @@ import {
   loadIncomeExpenseTrend,
   loadRecentTransactions,
   loadUpcomingBills,
-} from "../../../../lib/data/finance";
-import { DashboardOverviewClient } from "../../../../components/dashboard/DashboardOverviewClient";
+} from "../../../lib/data/finance";
+import { DashboardOverviewClient } from "../../../components/dashboard/DashboardOverviewClient";
 import {
   getTrendRangeMonths,
   type TrendRangeValue,
-} from "../../../../lib/dashboard/trendRanges";
+} from "../../../lib/dashboard/trendRanges";
 
 export default async function DashboardOverviewPage() {
   const defaultTrendRange: TrendRangeValue = "6m";

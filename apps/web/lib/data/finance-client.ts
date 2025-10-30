@@ -168,7 +168,8 @@ export async function fetchBalanceSummaryClient(
 
       let query = supabase
         .from("transactions")
-        .select("type, total:amount.sum()", { group: "type" });
+        // Grouping is supported by PostgREST but not typed in supabase-js
+        .select("type, total:amount.sum()", { group: "type" } as any);
 
       if (startDate) {
         query = query.gte("occurred_on", startDate);
@@ -217,7 +218,8 @@ export async function fetchCategorySummariesClient(
 
       let query = supabase
         .from("transactions")
-        .select("category_id, total:amount.sum()", { group: "category_id" })
+        // Grouping is supported by PostgREST but not typed in supabase-js
+        .select("category_id, total:amount.sum()", { group: "category_id" } as any)
         .eq("type", "expense");
 
       if (startDate) {

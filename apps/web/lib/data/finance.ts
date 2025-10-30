@@ -10,6 +10,11 @@ import {
 
 type TransactionRow = Database["public"]["Tables"]["transactions"]["Row"];
 type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+type TrendRow = {
+  occurred_on: TransactionRow["occurred_on"];
+  type: TransactionRow["type"];
+  amount: string | number | null;
+};
 
 type DateRange = {
   startDate?: string;
@@ -360,7 +365,8 @@ export async function fetchBalanceSummary(
 
       let query = supabase
         .from("transactions")
-        .select("type, total:amount.sum()", { group: "type" });
+        // Grouping is supported by PostgREST but not typed in supabase-js
+        .select("type, total:amount.sum()", { group: "type" } as any);
 
       if (range.startDate) {
         query = query.gte("occurred_on", range.startDate);
@@ -410,9 +416,10 @@ export async function fetchCategorySummaries(
 
       let query = supabase
         .from("transactions")
+        // Grouping is supported by PostgREST but not typed in supabase-js
         .select("category_id, type, total:amount.sum()", {
           group: "category_id, type",
-        });
+        } as any);
 
       if (startDate) {
         query = query.gte("occurred_on", startDate);

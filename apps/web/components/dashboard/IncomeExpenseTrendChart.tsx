@@ -151,7 +151,9 @@ export function IncomeExpenseTrendChart({
                 <XAxis dataKey="label" stroke={CHART_THEME.axis} tickLine={false} axisLine={false} />
                 <YAxis
                   stroke={CHART_THEME.axis}
-                  tickFormatter={(value) => formatCurrency(Number(value))}
+                  tickFormatter={(value: number | string) =>
+                    formatCurrency(Number(value))
+                  }
                   tickLine={false}
                   axisLine={false}
                   width={90}

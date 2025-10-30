@@ -45,6 +45,9 @@
 - `apps/web/playwright.config.ts` - Playwright configuration for running smoke and end-to-end scenarios.
 - `apps/web/tests/e2e/smoke.spec.ts` - E2E smoke test verifying sign-in, dashboard data, and CSV import flow.
 - `apps/web/tests/e2e/fixtures/sample-transactions.csv` - Fixture used by the end-to-end CSV import smoke test.
+- `.github/workflows/ci.yml` - Continuous integration workflow running linting, type checks, and tests on pushes and PRs.
+- `apps/web/tsconfig.typecheck.json` - TypeScript configuration excluding tests for CI type checking.
+- `apps/web/types/external.d.ts` - Ambient module declarations for packages used in client builds and tests.
 
 ### Notes
 
@@ -84,4 +87,4 @@
   - [x] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
   - [x] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
   - [x] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
-  - [ ] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
+  - [x] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
