@@ -1,19 +1,10 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-
-import type { Database } from "../lib/types";
-
-export default async function HomePage() {
-  const supabase = createServerComponentClient<Database>({ cookies });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session) {
-    redirect("/dashboard");
-  }
-
-  redirect("/signin");
+export default function HomePage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+      <h1 className="text-2xl font-semibold">asmFIN dashboard scaffold</h1>
+      <p className="mt-4 text-center text-base text-slate-600">
+        Supabase client setup will power authenticated data fetching in upcoming tasks.
+      </p>
+    </main>
+  );
 }

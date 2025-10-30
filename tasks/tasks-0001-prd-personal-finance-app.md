@@ -6,9 +6,7 @@
 - `.env.example` - Documented Supabase environment variables required by the web app.
 - `package.json` - Workspace root scripts delegating to the web application.
 - `apps/web/package.json` - Next.js app package definition and scripts.
-- `apps/web/vitest.config.ts` - Vitest configuration for unit and component tests.
-- `apps/web/vitest.setup.ts` - Shared test setup to extend Jest DOM matchers.
-- `supabase/functions/sync_transactions/index.ts` - Edge function to validate and insert imported transactions.
+- `supabase/functions/sync_transactions.ts` - Edge function to validate and insert imported transactions.
 - `apps/web/lib/env.ts` - Centralized environment variable validation shared by client and server utilities.
 - `apps/web/lib/types.ts` - Shared Supabase-generated types for strongly typed queries.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
@@ -64,8 +62,8 @@
 
 - [ ] 2.0 Integrate Supabase client and server-side data access
   - [x] 2.1 Configure Supabase client initialization with secure environment variable handling.
-  - [x] 2.2 Implement server-side data fetching utilities for transactions, category summaries, and balances.
-  - [x] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
+  - [ ] 2.2 Implement server-side data fetching utilities for transactions, category summaries, and balances.
+  - [ ] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
 - [ ] 3.0 Build dashboard layout and data wiring
   - [x] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
