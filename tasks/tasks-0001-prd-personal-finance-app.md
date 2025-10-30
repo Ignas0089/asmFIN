@@ -6,6 +6,8 @@
 - `.env.example` - Documented Supabase environment variables required by the web app.
 - `package.json` - Workspace root scripts delegating to the web application.
 - `apps/web/package.json` - Next.js app package definition and scripts.
+- `apps/web/vitest.config.ts` - Vitest configuration for unit and component tests.
+- `apps/web/vitest.setup.ts` - Shared test setup to extend Jest DOM matchers.
 - `supabase/functions/sync_transactions/index.ts` - Edge function to validate and insert imported transactions.
 - `apps/web/lib/env.ts` - Centralized environment variable validation shared by client and server utilities.
 - `apps/web/lib/types.ts` - Shared Supabase-generated types for strongly typed queries.
@@ -32,8 +34,11 @@
 - `apps/web/components/dashboard/TransactionImportPanel.tsx` - CSV upload UI with validation and status states.
 - `apps/web/middleware.ts` - Supabase middleware to hydrate auth session cookies.
 - `apps/web/lib/csv/importTransactions.ts` - Utility for parsing and normalizing uploaded CSV transaction data.
+- `apps/web/lib/csv/importTransactions.test.ts` - Unit tests covering CSV parsing normalization and validation.
 - `apps/web/tests/dashboard.spec.tsx` - Integration tests covering dashboard interactions and data flow.
 - `apps/web/tests/import.spec.ts` - Tests validating CSV import and Supabase persistence logic.
+- `apps/web/lib/data/queryHelpers.test.ts` - Tests verifying retry logic and data state helpers.
+- `apps/web/lib/format.test.ts` - Tests exercising currency and date formatting helpers.
 
 ### Notes
 
@@ -70,7 +75,7 @@
   - [x] 5.4 Wire import results into dashboard tables and trigger refresh on completion.
 
 - [ ] 6.0 Implement automated testing and quality gates
-  - [ ] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
+  - [x] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
   - [ ] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
   - [ ] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
   - [ ] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
