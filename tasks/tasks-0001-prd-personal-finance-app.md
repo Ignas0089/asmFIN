@@ -21,6 +21,8 @@
 - `apps/web/components/dashboard/DashboardOverviewClient.tsx` - Client-side dashboard orchestrator handling live updates.
 - `apps/web/components/dashboard/SpendingByCategoryChart.tsx` - Recharts-powered spending distribution widget for the dashboard.
 - `apps/web/components/dashboard/IncomeExpenseTrendChart.tsx` - Line chart visualizing income versus expenses across selectable ranges.
+- `apps/web/components/dashboard/ChartLegend.tsx` - Shared legend presentation for dashboard charts.
+- `apps/web/components/dashboard/ChartState.tsx` - Consistent loading, empty, and error messaging for visualizations.
 - `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
 - `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
 - `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
@@ -58,7 +60,7 @@
 - [ ] 4.0 Implement financial charts and visualizations
   - [x] 4.1 Develop spending by category chart using reusable chart component and responsive design.
   - [x] 4.2 Create income versus expenses trend chart with time range selector.
-  - [ ] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
+  - [x] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
 
 - [ ] 5.0 Support CSV transaction import workflow
   - [ ] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.

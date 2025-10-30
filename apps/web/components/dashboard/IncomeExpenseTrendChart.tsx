@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -19,9 +18,9 @@ import {
   type TrendRangeValue,
 } from "../../lib/dashboard/trendRanges";
 import { formatCurrency, formatMonthYear } from "../../lib/format";
-
-const INCOME_COLOR = "#34D399";
-const EXPENSE_COLOR = "#60A5FA";
+import { CHART_THEME, LINE_PALETTE } from "../../lib/dashboard/chartTheme";
+import { ChartLegend } from "./ChartLegend";
+import { ChartState } from "./ChartState";
 
 interface IncomeExpenseTrendChartProps {
   points: IncomeExpenseTrendPoint[];
@@ -65,6 +64,8 @@ function TrendTooltip({ active, payload, label }: TooltipProps<string, string>) 
   );
 }
 
+const SECTION_ID = "income-expense-trend-heading";
+
 export function IncomeExpenseTrendChart({
   points,
   isLoading,
@@ -84,16 +85,17 @@ export function IncomeExpenseTrendChart({
     [points]
   );
 
-  const latestNet = chartData.at(-1)?.net ?? 0;
+  const latest = chartData.at(-1);
+  const latestNet = latest?.net ?? 0;
 
   return (
     <section
-      aria-label="Income versus expenses trend"
+      aria-labelledby={SECTION_ID}
       className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
     >
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 id={SECTION_ID} className="text-base font-semibold text-slate-900">
             Income vs. expenses
           </h2>
           <p className="text-sm text-slate-500">
@@ -127,53 +129,73 @@ export function IncomeExpenseTrendChart({
       </p>
 
       {error ? (
-        <p className="mt-8 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-          {error}
-        </p>
+        <ChartState variant="error" message={error} />
       ) : isLoading ? (
-        <div className="mt-10 flex flex-1 items-center justify-center text-sm text-slate-400">
-          Loading trend…
-        </div>
+        <ChartState
+          variant="loading"
+          message="Loading trend…"
+          description="We’re refreshing income and expense totals for the selected range."
+        />
       ) : chartData.length === 0 ? (
-        <div className="mt-10 flex flex-1 items-center justify-center text-sm text-slate-500">
-          Add transactions to visualize your income and spending trends.
-        </div>
+        <ChartState
+          variant="empty"
+          message="No trend data yet"
+          description="Add transactions to visualize your income and spending trends."
+        />
       ) : (
-        <div className="mt-6 h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="4 4" stroke="#E2E8F0" />
-              <XAxis dataKey="label" stroke="#94A3B8" tickLine={false} axisLine={false} />
-              <YAxis
-                stroke="#94A3B8"
-                tickFormatter={(value) => formatCurrency(Number(value))}
-                tickLine={false}
-                axisLine={false}
-                width={90}
-              />
-              <Tooltip content={<TrendTooltip />} cursor={{ stroke: "#CBD5F5", strokeWidth: 1 }} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="income"
-                name="Income"
-                stroke={INCOME_COLOR}
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="expense"
-                name="Expenses"
-                stroke={EXPENSE_COLOR}
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <>
+          <div className="mt-6 h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="4 4" stroke={CHART_THEME.grid} />
+                <XAxis dataKey="label" stroke={CHART_THEME.axis} tickLine={false} axisLine={false} />
+                <YAxis
+                  stroke={CHART_THEME.axis}
+                  tickFormatter={(value) => formatCurrency(Number(value))}
+                  tickLine={false}
+                  axisLine={false}
+                  width={90}
+                />
+                <Tooltip content={<TrendTooltip />} cursor={{ stroke: CHART_THEME.cursor, strokeWidth: 1 }} />
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="Income"
+                  stroke={LINE_PALETTE.income}
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expense"
+                  name="Expenses"
+                  stroke={LINE_PALETTE.expense}
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <ChartLegend
+            className="mt-6"
+            items={[
+              {
+                label: "Income",
+                color: LINE_PALETTE.income,
+                value: latest ? formatCurrency(latest.income) : undefined,
+                ariaLabel: "Income line chart legend item",
+              },
+              {
+                label: "Expenses",
+                color: LINE_PALETTE.expense,
+                value: latest ? formatCurrency(latest.expense) : undefined,
+                ariaLabel: "Expenses line chart legend item",
+              },
+            ]}
+          />
+        </>
       )}
     </section>
   );

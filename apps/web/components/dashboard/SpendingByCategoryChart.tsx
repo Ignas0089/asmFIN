@@ -12,17 +12,11 @@ import {
 
 import type { CategorySummary } from "../../lib/data/finance";
 import { formatCurrency } from "../../lib/format";
+import { CATEGORY_PALETTE } from "../../lib/dashboard/chartTheme";
+import { ChartLegend } from "./ChartLegend";
+import { ChartState } from "./ChartState";
 
-const FALLBACK_COLORS = [
-  "#A5D8FF",
-  "#B5E48C",
-  "#FFC8DD",
-  "#FFD6A5",
-  "#CDB4DB",
-  "#FFADAD",
-  "#BDE0FE",
-  "#FBC3BC",
-];
+const SECTION_ID = "spending-by-category-heading";
 
 interface SpendingByCategoryChartProps {
   summaries: CategorySummary[];
@@ -45,7 +39,7 @@ function buildChartData(summaries: CategorySummary[]): ChartDatum[] {
       color:
         summary.color?.trim() && summary.color !== "#000000"
           ? summary.color
-          : FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+          : CATEGORY_PALETTE[index % CATEGORY_PALETTE.length],
     }));
 }
 
@@ -78,11 +72,11 @@ export function SpendingByCategoryChart({
 
   return (
     <section
-      aria-label="Spending by category"
+      aria-labelledby={SECTION_ID}
       className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
     >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold text-slate-900">
+        <h2 id={SECTION_ID} className="text-base font-semibold text-slate-900">
           Spending by category
         </h2>
         <p className="text-sm text-slate-500">
@@ -91,17 +85,19 @@ export function SpendingByCategoryChart({
       </header>
 
       {error ? (
-        <p className="mt-8 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-          {error}
-        </p>
+        <ChartState variant="error" message={error} />
       ) : isLoading ? (
-        <div className="mt-8 flex flex-1 items-center justify-center text-sm text-slate-400">
-          Loading spending data…
-        </div>
+        <ChartState
+          variant="loading"
+          message="Loading spending data…"
+          description="We’re syncing your latest category totals."
+        />
       ) : data.length === 0 ? (
-        <div className="mt-8 flex flex-1 items-center justify-center text-sm text-slate-500">
-          Add expenses with categories to see your spending breakdown.
-        </div>
+        <ChartState
+          variant="empty"
+          message="No category spending yet"
+          description="Add expenses with categories to see your spending breakdown."
+        />
       ) : (
         <>
           <div className="mt-6 h-56 w-full">
@@ -126,26 +122,14 @@ export function SpendingByCategoryChart({
             </ResponsiveContainer>
           </div>
 
-          <ul className="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-            {data.map((entry) => (
-              <li
-                key={entry.name}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 px-3 py-2"
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="inline-flex h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                  />
-                  {entry.name}
-                </span>
-                <span className="font-medium text-slate-900">
-                  {formatCurrency(entry.value)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <ChartLegend
+            className="mt-6"
+            items={data.map((entry) => ({
+              label: entry.name,
+              color: entry.color,
+              value: formatCurrency(entry.value),
+            }))}
+          />
         </>
       )}
     </section>
