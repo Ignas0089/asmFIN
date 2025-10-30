@@ -12,10 +12,12 @@
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
 - `apps/web/lib/supabase/server.ts` - Supabase server-side client for trusted data fetching.
 - `apps/web/lib/data/finance.ts` - Typed data-access helpers for dashboard metrics and tables.
+- `apps/web/lib/data/finance-client.ts` - Browser data utilities powering dashboard refreshes.
 - `apps/web/lib/data/queryHelpers.ts` - Shared helpers for retryable Supabase queries and async states.
 - `apps/web/lib/format.ts` - Shared currency and date formatting utilities for UI components.
 - `apps/web/app/(dashboard)/dashboard/layout.tsx` - Dashboard shell with navigation and auth guard.
 - `apps/web/app/(dashboard)/dashboard/page.tsx` - Entry overview route for dashboard content.
+- `apps/web/components/dashboard/DashboardOverviewClient.tsx` - Client-side dashboard orchestrator handling live updates.
 - `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
 - `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
 - `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
@@ -48,7 +50,7 @@
 - [ ] 3.0 Build dashboard layout and data wiring
   - [x] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
   - [x] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
-  - [ ] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
+  - [x] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
 
 - [ ] 4.0 Implement financial charts and visualizations
   - [ ] 4.1 Develop spending by category chart using reusable chart component and responsive design.
