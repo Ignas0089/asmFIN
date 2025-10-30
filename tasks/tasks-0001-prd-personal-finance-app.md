@@ -29,6 +29,7 @@
 - `apps/web/components/dashboard/SummaryCard.tsx` - Reusable metric card for displaying balance and cash flow highlights.
 - `apps/web/components/dashboard/RecentTransactionsList.tsx` - Widget listing the latest recorded transactions.
 - `apps/web/components/dashboard/UpcomingBillsList.tsx` - Widget surfacing scheduled expense reminders.
+- `apps/web/components/dashboard/TransactionImportPanel.tsx` - CSV upload UI with validation and status states.
 - `apps/web/middleware.ts` - Supabase middleware to hydrate auth session cookies.
 - `apps/web/lib/csv/importTransactions.ts` - Utility for parsing and normalizing uploaded CSV transaction data.
 - `apps/web/tests/dashboard.spec.tsx` - Integration tests covering dashboard interactions and data flow.
@@ -63,7 +64,7 @@
   - [x] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
 
 - [ ] 5.0 Support CSV transaction import workflow
-  - [ ] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
+  - [x] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
   - [ ] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
   - [ ] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
   - [ ] 5.4 Wire import results into dashboard tables and trigger refresh on completion.

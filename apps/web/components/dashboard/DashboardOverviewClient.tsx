@@ -27,6 +27,7 @@ import { RecentTransactionsList } from "./RecentTransactionsList";
 import { UpcomingBillsList } from "./UpcomingBillsList";
 import { SpendingByCategoryChart } from "./SpendingByCategoryChart";
 import { IncomeExpenseTrendChart } from "./IncomeExpenseTrendChart";
+import { TransactionImportPanel } from "./TransactionImportPanel";
 import {
   getTrendRangeMonths,
   type TrendRangeValue,
@@ -279,6 +280,7 @@ export function DashboardOverviewClient({
             isLoading={upcomingBillsResult.status === "loading"}
             error={upcomingBillsResult.error}
           />
+          <TransactionImportPanel />
         </div>
         <SpendingByCategoryChart
           summaries={spendingSummaries}
