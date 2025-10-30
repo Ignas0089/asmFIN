@@ -27,6 +27,13 @@ export interface FetchRecentTransactionsOptions extends DateRange {
   retryDelayMs?: number;
 }
 
+export interface UpcomingBillsOptions extends DateRange {
+  limit?: number;
+  optimisticData?: TransactionWithCategory[];
+  retryAttempts?: number;
+  retryDelayMs?: number;
+}
+
 export interface BalanceSummary {
   totalIncome: number;
   totalExpense: number;
@@ -63,6 +70,10 @@ export interface BalanceSummaryOptions extends DateRange {
 export interface DataLoadResult<T> {
   loading: DataResult<T>;
   result: DataResult<T>;
+}
+
+function getIsoDate(value: Date) {
+  return value.toISOString().slice(0, 10);
 }
 
 export async function fetchRecentTransactions(
@@ -116,6 +127,75 @@ export async function fetchRecentTransactions(
 
       if (error) {
         throw new Error(`Failed to load recent transactions: ${error.message}`);
+      }
+
+      return data ?? [];
+    },
+    {
+      retries: retryAttempts ?? 2,
+      retryDelayMs,
+    }
+  );
+}
+
+export async function fetchUpcomingBills(
+  options: UpcomingBillsOptions = {}
+): Promise<TransactionWithCategory[]> {
+  const {
+    limit = 5,
+    startDate,
+    endDate,
+    retryAttempts,
+    retryDelayMs,
+  } = options;
+
+  return executeWithRetry(
+    async () => {
+      const supabase = getSupabaseServerClient();
+
+      let query = supabase
+        .from("transactions")
+        .select(
+          `
+            id,
+            occurred_on,
+            description,
+            amount,
+            type,
+            notes,
+            source,
+            created_at,
+            updated_at,
+            category:categories (
+              id,
+              name,
+              type,
+              color,
+              created_at,
+              updated_at
+            )
+          `
+        )
+        .eq("type", "expense")
+        .order("occurred_on", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      const today = getIsoDate(new Date());
+      const normalizedStart = startDate ?? today;
+      query = query.gte("occurred_on", normalizedStart);
+
+      if (endDate) {
+        query = query.lte("occurred_on", endDate);
+      }
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query.returns<TransactionWithCategory[]>();
+
+      if (error) {
+        throw new Error(`Failed to load upcoming bills: ${error.message}`);
       }
 
       return data ?? [];
@@ -301,6 +381,20 @@ export async function loadCategorySummaries(
 
   try {
     const data = await fetchCategorySummaries(options);
+    return { loading, result: createSuccessResult(data) };
+  } catch (error) {
+    return { loading, result: createErrorResult(optimisticData, error) };
+  }
+}
+
+export async function loadUpcomingBills(
+  options: UpcomingBillsOptions = {}
+): Promise<DataLoadResult<TransactionWithCategory[]>> {
+  const optimisticData = options.optimisticData ?? [];
+  const loading = createLoadingResult(optimisticData);
+
+  try {
+    const data = await fetchUpcomingBills(options);
     return { loading, result: createSuccessResult(data) };
   } catch (error) {
     return { loading, result: createErrorResult(optimisticData, error) };

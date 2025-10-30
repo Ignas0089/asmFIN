@@ -13,11 +13,15 @@
 - `apps/web/lib/supabase/server.ts` - Supabase server-side client for trusted data fetching.
 - `apps/web/lib/data/finance.ts` - Typed data-access helpers for dashboard metrics and tables.
 - `apps/web/lib/data/queryHelpers.ts` - Shared helpers for retryable Supabase queries and async states.
+- `apps/web/lib/format.ts` - Shared currency and date formatting utilities for UI components.
 - `apps/web/app/(dashboard)/dashboard/layout.tsx` - Dashboard shell with navigation and auth guard.
 - `apps/web/app/(dashboard)/dashboard/page.tsx` - Entry overview route for dashboard content.
 - `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
 - `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
 - `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
+- `apps/web/components/dashboard/SummaryCard.tsx` - Reusable metric card for displaying balance and cash flow highlights.
+- `apps/web/components/dashboard/RecentTransactionsList.tsx` - Widget listing the latest recorded transactions.
+- `apps/web/components/dashboard/UpcomingBillsList.tsx` - Widget surfacing scheduled expense reminders.
 - `apps/web/middleware.ts` - Supabase middleware to hydrate auth session cookies.
 - `apps/web/lib/csv/importTransactions.ts` - Utility for parsing and normalizing uploaded CSV transaction data.
 - `apps/web/tests/dashboard.spec.tsx` - Integration tests covering dashboard interactions and data flow.
@@ -43,7 +47,7 @@
 
 - [ ] 3.0 Build dashboard layout and data wiring
   - [x] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
-  - [ ] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
+  - [x] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
   - [ ] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
 
 - [ ] 4.0 Implement financial charts and visualizations
