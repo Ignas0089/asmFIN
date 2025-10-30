@@ -1,19 +1,11 @@
 -- Development seed data for the personal finance schema
--- Provides sample categories, transactions, and an import batch for local testing.
+-- Provides sample categories and transactions for local testing.
 
 begin;
 
 -- Clear existing data so the seed can be reapplied safely in development.
-delete from public.transaction_audit_log;
 delete from public.transactions;
 delete from public.categories;
-delete from public.import_batches;
-
--- Reference import batch for seeded transactions.
-insert into public.import_batches (id, source, file_name, checksum, metadata)
-values
-    ('00000000-0000-0000-0000-0000000000a0', 'seed', 'development-fixtures.csv', 'seed-fixtures-checksum',
-     jsonb_build_object('description', 'Development fixtures seeded via supabase/seed.sql'));
 
 -- Income and expense categories with pastel-inspired color accents.
 insert into public.categories (id, name, type, color)
@@ -33,26 +25,25 @@ insert into public.transactions (
     amount,
     type,
     category_id,
-    import_batch_id,
     notes,
-    raw_data
+    source
 )
 values
     ('00000000-0000-0000-0000-000000000301', '2024-05-31', 'Monthly Salary', 1800.00, 'income', '00000000-0000-0000-0000-000000000101',
-     '00000000-0000-0000-0000-0000000000a0', 'Base salary payment', jsonb_build_object('source', 'payroll')),
+     'Base salary payment', 'manual'),
     ('00000000-0000-0000-0000-000000000302', '2024-05-27', 'Website redesign project', 420.00, 'income', '00000000-0000-0000-0000-000000000102',
-     '00000000-0000-0000-0000-0000000000a0', 'Freelance invoice paid', jsonb_build_object('invoice', 'INV-204')), 
+     'Freelance invoice paid', 'manual'),
     ('00000000-0000-0000-0000-000000000303', '2024-05-29', 'Grocery run - Fresh Market', 82.45, 'expense', '00000000-0000-0000-0000-000000000201',
-     '00000000-0000-0000-0000-0000000000a0', 'Weekly groceries', jsonb_build_object('items', 24)),
+     'Weekly groceries', 'manual'),
     ('00000000-0000-0000-0000-000000000304', '2024-05-28', 'Dinner with friends', 36.80, 'expense', '00000000-0000-0000-0000-000000000202',
-     '00000000-0000-0000-0000-0000000000a0', 'Restaurant spend', jsonb_build_object('people', 3)),
+     'Restaurant spend', 'manual'),
     ('00000000-0000-0000-0000-000000000305', '2024-05-26', 'Metro pass reload', 25.00, 'expense', '00000000-0000-0000-0000-000000000203',
-     '00000000-0000-0000-0000-0000000000a0', 'Monthly commute', jsonb_build_object('type', 'public transit')),
+     'Monthly commute', 'manual'),
     ('00000000-0000-0000-0000-000000000306', '2024-05-25', 'Electricity bill', 64.32, 'expense', '00000000-0000-0000-0000-000000000204',
-     '00000000-0000-0000-0000-0000000000a0', 'Utility payment', jsonb_build_object('account', 'ELEC-7782')),
+     'Utility payment', 'manual'),
     ('00000000-0000-0000-0000-000000000307', '2024-05-24', 'Lunch meeting', 18.60, 'expense', '00000000-0000-0000-0000-000000000202',
-     '00000000-0000-0000-0000-0000000000a0', 'Client lunch', jsonb_build_object('client', 'Acme Co.')),
+     'Client lunch', 'manual'),
     ('00000000-0000-0000-0000-000000000308', '2024-05-23', 'Ride share - airport drop', 32.15, 'expense', '00000000-0000-0000-0000-000000000203',
-     '00000000-0000-0000-0000-0000000000a0', 'Travel expense', jsonb_build_object('service', 'Lift'));
+     'Travel expense', 'manual');
 
 commit;

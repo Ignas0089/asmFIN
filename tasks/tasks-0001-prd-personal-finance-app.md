@@ -1,7 +1,8 @@
 ## Relevant Files
 
+- `docs/0001-data-model-review.md` - Notes confirming entities derived from the PRD.
 - `supabase/migrations/*` - SQL migration scripts defining database schema changes for finance entities.
-- `supabase/seed.sql` - Development fixture inserts for categories, transactions, and import metadata.
+- `supabase/seed.sql` - Development fixture inserts for categories and transactions.
 - `supabase/functions/sync_transactions.ts` - Edge function to validate and insert imported transactions.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
 - `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
@@ -22,13 +23,13 @@
 ## Tasks
 
 - [ ] 1.0 Define and migrate the personal finance database schema
-  - [ ] 1.1 Review PRD data requirements to confirm necessary entities (accounts, categories, transactions, budgets).
+  - [x] 1.1 Review PRD data requirements to confirm necessary entities (categories, transactions, supporting metadata).
   - [x] 1.2 Create Supabase SQL migrations for tables, relationships, constraints, and enum types.
-  - [x] 1.3 Seed development fixtures (sample accounts, categories, transactions) for testing the dashboard.
+  - [x] 1.3 Seed development fixtures (sample categories, transactions) for testing the dashboard.
 
 - [ ] 2.0 Integrate Supabase client and server-side data access
   - [ ] 2.1 Configure Supabase client initialization with secure environment variable handling.
-  - [ ] 2.2 Implement server-side data fetching utilities for accounts, budgets, and transactions.
+  - [ ] 2.2 Implement server-side data fetching utilities for transactions, category summaries, and balances.
   - [ ] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
 - [ ] 3.0 Build dashboard layout and data wiring
