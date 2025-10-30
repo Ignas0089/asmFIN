@@ -10,14 +10,42 @@
 - `apps/web/lib/env.ts` - Centralized environment variable validation shared by client and server utilities.
 - `apps/web/lib/types.ts` - Shared Supabase-generated types for strongly typed queries.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
-- `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
-- `apps/web/components/BalanceOverview.tsx` - Summary card component displaying key financial metrics.
-- `apps/web/components/SpendingChart.tsx` - Chart component rendering categorized spending using charting library.
-- `apps/web/components/IncomeVsExpenseChart.tsx` - Chart visualizing income versus expenses over time.
-- `apps/web/components/TransactionsTable.tsx` - Tabular view of transactions with pagination and filters.
+- `apps/web/lib/supabase/server.ts` - Supabase server-side client for trusted data fetching.
+- `apps/web/lib/data/finance.ts` - Typed data-access helpers for dashboard metrics and tables.
+- `apps/web/lib/data/finance-client.ts` - Browser data utilities powering dashboard refreshes.
+- `apps/web/lib/data/queryHelpers.ts` - Shared helpers for retryable Supabase queries and async states.
+- `apps/web/lib/format.ts` - Shared currency and date formatting utilities for UI components.
+- `apps/web/lib/dashboard/trendRanges.ts` - Shared constants describing dashboard trend range presets.
+- `apps/web/app/(dashboard)/dashboard/layout.tsx` - Dashboard shell with navigation and auth guard.
+- `apps/web/app/(dashboard)/dashboard/page.tsx` - Entry overview route for dashboard content.
+- `apps/web/components/dashboard/DashboardOverviewClient.tsx` - Client-side dashboard orchestrator handling live updates.
+- `apps/web/components/dashboard/SpendingByCategoryChart.tsx` - Recharts-powered spending distribution widget for the dashboard.
+- `apps/web/components/dashboard/IncomeExpenseTrendChart.tsx` - Line chart visualizing income versus expenses across selectable ranges.
+- `apps/web/components/dashboard/ChartLegend.tsx` - Shared legend presentation for dashboard charts.
+- `apps/web/components/dashboard/ChartState.tsx` - Consistent loading, empty, and error messaging for visualizations.
+- `apps/web/app/(auth)/signin/page.tsx` - Supabase email/password authentication screen.
+- `apps/web/app/auth/callback/route.ts` - Route handler exchanging Supabase auth codes for sessions.
+- `apps/web/components/dashboard/*` - Shared dashboard UI components (navigation, header, actions).
+- `apps/web/components/dashboard/SummaryCard.tsx` - Reusable metric card for displaying balance and cash flow highlights.
+- `apps/web/components/dashboard/RecentTransactionsList.tsx` - Widget listing the latest recorded transactions.
+- `apps/web/components/dashboard/UpcomingBillsList.tsx` - Widget surfacing scheduled expense reminders.
+- `apps/web/components/dashboard/TransactionImportPanel.tsx` - CSV upload UI with validation and status states.
+- `apps/web/middleware.ts` - Supabase middleware to hydrate auth session cookies.
 - `apps/web/lib/csv/importTransactions.ts` - Utility for parsing and normalizing uploaded CSV transaction data.
+- `apps/web/lib/csv/importTransactions.test.ts` - Unit tests covering CSV parsing normalization and validation.
 - `apps/web/tests/dashboard.spec.tsx` - Integration tests covering dashboard interactions and data flow.
 - `apps/web/tests/import.spec.ts` - Tests validating CSV import and Supabase persistence logic.
+- `apps/web/lib/data/queryHelpers.test.ts` - Tests verifying retry logic and data state helpers.
+- `apps/web/lib/format.test.ts` - Tests exercising currency and date formatting helpers.
+- `apps/web/components/dashboard/SpendingByCategoryChart.test.tsx` - Component coverage for spending chart states and totals.
+- `apps/web/components/dashboard/IncomeExpenseTrendChart.test.tsx` - Component coverage for income vs. expense trend widget.
+- `apps/web/components/dashboard/TransactionImportPanel.test.tsx` - Component coverage for CSV import UI flows.
+- `apps/web/playwright.config.ts` - Playwright configuration for running smoke and end-to-end scenarios.
+- `apps/web/tests/e2e/smoke.spec.ts` - E2E smoke test verifying sign-in, dashboard data, and CSV import flow.
+- `apps/web/tests/e2e/fixtures/sample-transactions.csv` - Fixture used by the end-to-end CSV import smoke test.
+- `.github/workflows/ci.yml` - Continuous integration workflow running linting, type checks, and tests on pushes and PRs.
+- `apps/web/tsconfig.typecheck.json` - TypeScript configuration excluding tests for CI type checking.
+- `apps/web/types/external.d.ts` - Ambient module declarations for packages used in client builds and tests.
 
 ### Notes
 
@@ -38,23 +66,23 @@
   - [ ] 2.3 Add optimistic error handling, loading states, and retry logic for Supabase requests.
 
 - [ ] 3.0 Build dashboard layout and data wiring
-  - [ ] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
-  - [ ] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
-  - [ ] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
+  - [x] 3.1 Implement dashboard route structure with authenticated access guard and layout shell.
+  - [x] 3.2 Compose summary widgets (balances, cash flow, upcoming bills) driven by Supabase queries.
+  - [x] 3.3 Connect real-time updates or polling to refresh dashboard metrics when data changes.
 
 - [ ] 4.0 Implement financial charts and visualizations
-  - [ ] 4.1 Develop spending by category chart using reusable chart component and responsive design.
-  - [ ] 4.2 Create income versus expenses trend chart with time range selector.
-  - [ ] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
+  - [x] 4.1 Develop spending by category chart using reusable chart component and responsive design.
+  - [x] 4.2 Create income versus expenses trend chart with time range selector.
+  - [x] 4.3 Ensure charts share consistent color palette, legends, accessibility labels, and loading states.
 
 - [ ] 5.0 Support CSV transaction import workflow
-  - [ ] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
-  - [ ] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
-  - [ ] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
-  - [ ] 5.4 Wire import results into dashboard tables and trigger refresh on completion.
+  - [x] 5.1 Build client-side CSV upload UI with validation messaging and parsing status indicators.
+  - [x] 5.2 Implement CSV parsing utility to normalize transaction fields and detect duplicates.
+  - [x] 5.3 Create Supabase edge function or RPC to insert parsed transactions and return import summary.
+  - [x] 5.4 Wire import results into dashboard tables and trigger refresh on completion.
 
 - [ ] 6.0 Implement automated testing and quality gates
-  - [ ] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
-  - [ ] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
-  - [ ] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
-  - [ ] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
+  - [x] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
+  - [x] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
+  - [x] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
+  - [x] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
