@@ -1,6 +1,7 @@
 ## Relevant Files
 
 - `supabase/migrations/*` - SQL migration scripts defining database schema changes for finance entities.
+- `supabase/seed.sql` - Development fixture inserts for categories, transactions, and import metadata.
 - `supabase/functions/sync_transactions.ts` - Edge function to validate and insert imported transactions.
 - `apps/web/lib/supabase/client.ts` - Supabase client setup used across the dashboard.
 - `apps/web/app/dashboard/page.tsx` - Main dashboard route composing widgets and data providers.
@@ -23,7 +24,7 @@
 - [ ] 1.0 Define and migrate the personal finance database schema
   - [ ] 1.1 Review PRD data requirements to confirm necessary entities (accounts, categories, transactions, budgets).
   - [x] 1.2 Create Supabase SQL migrations for tables, relationships, constraints, and enum types.
-  - [ ] 1.3 Seed development fixtures (sample accounts, categories, transactions) for testing the dashboard.
+  - [x] 1.3 Seed development fixtures (sample accounts, categories, transactions) for testing the dashboard.
 
 - [ ] 2.0 Integrate Supabase client and server-side data access
   - [ ] 2.1 Configure Supabase client initialization with secure environment variable handling.
