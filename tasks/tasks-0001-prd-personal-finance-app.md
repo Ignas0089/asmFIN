@@ -39,6 +39,9 @@
 - `apps/web/tests/import.spec.ts` - Tests validating CSV import and Supabase persistence logic.
 - `apps/web/lib/data/queryHelpers.test.ts` - Tests verifying retry logic and data state helpers.
 - `apps/web/lib/format.test.ts` - Tests exercising currency and date formatting helpers.
+- `apps/web/components/dashboard/SpendingByCategoryChart.test.tsx` - Component coverage for spending chart states and totals.
+- `apps/web/components/dashboard/IncomeExpenseTrendChart.test.tsx` - Component coverage for income vs. expense trend widget.
+- `apps/web/components/dashboard/TransactionImportPanel.test.tsx` - Component coverage for CSV import UI flows.
 
 ### Notes
 
@@ -76,6 +79,6 @@
 
 - [ ] 6.0 Implement automated testing and quality gates
   - [x] 6.1 Add unit tests for data utilities, CSV parsing, and Supabase integration helpers.
-  - [ ] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
+  - [x] 6.2 Create component tests for dashboard widgets, charts, and import flow using testing library.
   - [ ] 6.3 Define end-to-end smoke test covering login, dashboard view, and CSV upload success scenario.
   - [ ] 6.4 Configure CI workflow (if absent) to run linting, type checking, and test suites on pull requests.
